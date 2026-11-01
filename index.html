@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Melodiat - Kids Melody Maker</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts for Playful Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti for Reward Animations -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandYellow: '#FFD166',
+            brandPink: '#FF6B6B',
+            brandPurple: '#845EC2',
+            brandBlue: '#4D96FF',
+            brandGreen: '#6BCB77',
+            brandOrange: '#FF9F45'
+          },
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Fredoka', cursive, sans-serif;
+      background: linear-gradient(135deg, #a8edd9 0%, #fed6e3 100%);
+      min-height: 100vh;
+      user-select: none;
+    }
+    
+    /* Playful bouncy button effects */
+    .btn-bounce {
+      transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-bounce:hover {
+      transform: scale(1.05) translateY(-2px);
+    }
+    .btn-bounce:active {
+      transform: scale(0.95) translateY(1px);
+    }
+
+    /* Custom grid scrollbar */
+    ::-webkit-scrollbar {
+      height: 10px;
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #845EC2;
+      border-radius: 10px;
+    }
+
+    /* Glowing active beats */
+    .active-beat {
+      box-shadow: 0 0 15px #FFD166, inset 0 0 8px #ffffff;
+      animation: pulseCell 0.3s ease-in-out;
+    }
+    
+    @keyframes pulseCell {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    /* Floating floating note background animation */
+    .bg-note {
+      position: absolute;
+      opacity: 0.15;
+      animation: floatNote 12s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes floatNote {
+      0% { transform: translateY(105vh) rotate(0deg); }
+      100% { transform: translateY(-10vh) rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-800 relative overflow-x-hidden">
+
+  <!-- Background Floating Music Notes Decorative Elements -->
+  <i class="fa-solid fa-music bg-note text-6xl text-purple-600" style="left: 5%; animation-duration: 14s; animation-delay: 0s;"></i>
+  <i class="fa-solid fa-guitar bg-note text-7xl text-pink-500" style="left: 20%; animation-duration: 18s; animation-delay: 3s;"></i>
+  <i class="fa-solid fa-drum bg-note text-5xl text-blue-500" style="left: 45%; animation-duration: 12s; animation-delay: 1s;"></i>
+  <i class="fa-solid fa-record-vinyl bg-note text-6xl text-yellow-500" style="left: 70%; animation-duration: 16s; animation-delay: 4s;"></i>
+  <i class="fa-solid fa-bell bg-note text-6xl text-green-500" style="left: 88%; animation-duration: 15s; animation-delay: 2s;"></i>
+
+  <!-- Header Section -->
+  <header class="w-full bg-white/80 backdrop-blur-md border-b-4 border-yellow-300 shadow-md py-3 px-4 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-gradient-to-tr from-brandPink to-brandYellow rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg transform rotate-[-6deg] hover:rotate-0 transition-transform">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div>
+          <h1 class="text-3xl font-black tracking-wider bg-gradient-to-r from-brandPink via-brandPurple to-brandBlue bg-clip-text text-transparent">
+            Melodiat
+          </h1>
+          <p class="text-xs font-quicksand font-bold text-slate-500 -mt-1">Magical Kids Melody Maker 🎶</p>
+        </div>
+      </div>
+
+      <!-- Presets & Controls -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center bg-yellow-100 p-1.5 rounded-2xl border-2 border-yellow-300">
+          <span class="text-xs font-bold text-amber-700 px-2"><i class="fa-solid fa-star text-yellow-500"></i> Presets:</span>
+          <select id="presetSelect" class="bg-white text-xs font-bold text-slate-700 rounded-xl px-2 py-1 outline-none border border-yellow-300 cursor-pointer hover:bg-yellow-50 transition-colors">
+            <option value="">-- Choose Melody --</option>
+            <option value="twinkle">Twinkle Twinkle</option>
+            <option value="birthday">Happy Birthday</option>
+            <option value="jingle">Jingle Bells</option>
+            <option value="funky">Funky Beat</option>
+          </select>
+        </div>
+
+        <button id="btnNew" class="btn-bounce bg-teal-400 hover:bg-teal-500 text-white font-bold py-1.5 px-3 rounded-xl shadow border-b-4 border-teal-600 text-xs flex items-center gap-1">
+          <i class="fa-solid fa-file-circle-plus"></i> New
+        </button>
+        <button id="btnSaveProj" class="btn-bounce bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-3 rounded-xl shadow border-b-4 border-blue-700 text-xs flex items-center gap-1">
+          <i class="fa-solid fa-floppy-disk"></i> Save
+        </button>
+        <button id="btnLoadProj" class="btn-bounce bg-purple-500 hover:bg-purple-600 text-white font-bold py-1.5 px-3 rounded-xl shadow border-b-4 border-purple-700 text-xs flex items-center gap-1">
+          <i class="fa-solid fa-folder-open"></i> Load
+        </button>
+        <input type="file" id="fileInput" accept=".json" class="hidden" />
+
+        <button id="btnExportWav" class="btn-bounce bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-1.5 px-3 rounded-xl shadow border-b-4 border-rose-700 text-xs flex items-center gap-1">
+          <i class="fa-solid fa-file-audio"></i> Export WAV
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 md:p-6 flex flex-col gap-6">
+
+    <!-- Top Toolbar: Transport & Instrument Selection -->
+    <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 md:p-6 border-4 border-white shadow-xl flex flex-col lg:flex-row items-center justify-between gap-6">
+      
+      <!-- Playback Controls -->
+      <div class="flex items-center gap-3">
+        <button id="btnPlay" class="btn-bounce bg-brandGreen hover:bg-green-500 text-white text-xl md:text-2xl font-black w-14 h-14 rounded-2xl shadow-lg border-b-4 border-green-700 flex items-center justify-center">
+          <i class="fa-solid fa-play ml-1"></i>
+        </button>
+        
+        <button id="btnStop" class="btn-bounce bg-brandPink hover:bg-red-500 text-white text-xl md:text-2xl font-black w-14 h-14 rounded-2xl shadow-lg border-b-4 border-red-700 flex items-center justify-center">
+          <i class="fa-solid fa-square"></i>
+        </button>
+
+        <button id="btnRecord" class="btn-bounce bg-amber-500 hover:bg-amber-600 text-white text-lg font-bold px-4 h-14 rounded-2xl shadow-lg border-b-4 border-amber-700 flex items-center gap-2">
+          <div id="recDot" class="w-4 h-4 bg-red-200 rounded-full border-2 border-white"></div>
+          <span id="recStatusText">Record</span>
+        </button>
+      </div>
+
+      <!-- Instrument Picker -->
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <button data-inst="piano" class="inst-btn btn-bounce bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold px-3 py-2 rounded-2xl border-2 border-purple-400 flex items-center gap-2 active-inst shadow">
+          <span class="text-xl">🎹</span> Piano
+        </button>
+        <button data-inst="guitar" class="inst-btn btn-bounce bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-3 py-2 rounded-2xl border-2 border-amber-400 flex items-center gap-2 shadow">
+          <span class="text-xl">🎸</span> Guitar
+        </button>
+        <button data-inst="xylophone" class="inst-btn btn-bounce bg-cyan-100 hover:bg-cyan-200 text-cyan-800 font-bold px-3 py-2 rounded-2xl border-2 border-cyan-400 flex items-center gap-2 shadow">
+          <span class="text-xl">🔔</span> Xylophone
+        </button>
+        <button data-inst="synth" class="inst-btn btn-bounce bg-pink-100 hover:bg-pink-200 text-pink-800 font-bold px-3 py-2 rounded-2xl border-2 border-pink-400 flex items-center gap-2 shadow">
+          <span class="text-xl">🚀</span> Synth
+        </button>
+        <button data-inst="drums" class="inst-btn btn-bounce bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold px-3 py-2 rounded-2xl border-2 border-orange-400 flex items-center gap-2 shadow">
+          <span class="text-xl">🥁</span> Drums
+        </button>
+      </div>
+
+      <!-- Speed (Tempo) & Volume Controls -->
+      <div class="flex items-center gap-4 bg-slate-100 p-3 rounded-2xl border border-slate-200">
+        
+        <!-- Tempo -->
+        <div class="flex flex-col items-center w-28">
+          <label class="text-xs font-bold text-slate-600 flex items-center gap-1 mb-1">
+            <span id="tempoIcon" class="text-base">🐢</span> Speed: <span id="tempoVal" class="text-brandPurple font-black">120</span>
+          </label>
+          <input type="range" id="tempoSlider" min="60" max="220" value="120" class="w-full accent-brandPurple cursor-pointer">
+        </div>
+
+        <div class="h-8 w-0.5 bg-slate-300"></div>
+
+        <!-- Volume -->
+        <div class="flex flex-col items-center w-24">
+          <label class="text-xs font-bold text-slate-600 flex items-center gap-1 mb-1">
+            <i class="fa-solid fa-volume-high text-brandBlue"></i> Vol: <span id="volVal" class="text-brandBlue font-black">80%</span>
+          </label>
+          <input type="range" id="volSlider" min="0" max="100" value="80" class="w-full accent-brandBlue cursor-pointer">
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Music Sequencer Matrix -->
+    <div class="bg-white/95 backdrop-blur-md rounded-3xl p-4 md:p-6 border-4 border-white shadow-xl flex flex-col gap-3">
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-lg font-black text-brandPurple flex items-center gap-2">
+          <i class="fa-solid fa-grip text-brandPink"></i> Melody Grid Sequencer
+        </h2>
+        <div class="flex items-center gap-2">
+          <button id="btnClearGrid" class="text-xs bg-red-100 hover:bg-red-200 text-red-600 font-bold px-3 py-1.5 rounded-xl border border-red-300 transition-colors">
+            <i class="fa-solid fa-trash-can"></i> Clear Grid
+          </button>
+          <span class="text-xs bg-purple-100 text-purple-700 font-bold px-3 py-1.5 rounded-xl border border-purple-200">
+            16 Beats Loop
+          </span>
+        </div>
+      </div>
+
+      <!-- Scrollable Sequencer Container -->
+      <div class="overflow-x-auto pb-3 pt-1">
+        <div id="sequencerGrid" class="min-w-[700px] flex flex-col gap-2">
+          <!-- Dynamically Generated Grid Rows -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Live Keyboard & Drum Pads -->
+    <div class="bg-white/95 backdrop-blur-md rounded-3xl p-4 md:p-6 border-4 border-white shadow-xl flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-black text-brandBlue flex items-center gap-2">
+          <i class="fa-solid fa-keyboard text-brandYellow"></i> Interactive Keyboard & Pads
+        </h2>
+        <span class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full hidden sm:inline-block">
+          Press keyboard keys (A-L) or tap to play!
+        </span>
+      </div>
+
+      <!-- Live Melodic Keys (Show when Melodic instrument selected) -->
+      <div id="keyboardContainer" class="flex justify-center items-end h-44 p-3 bg-slate-800 rounded-2xl relative shadow-inner overflow-x-auto">
+        <!-- Generated piano keys -->
+      </div>
+
+      <!-- Live Drum Pads (Show when Drums instrument selected) -->
+      <div id="drumPadsContainer" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-800 rounded-2xl shadow-inner">
+        <!-- Generated drum pads -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white font-bold px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 z-50 flex items-center gap-3">
+    <i id="toastIcon" class="fa-solid fa-circle-info text-yellow-400 text-xl"></i>
+    <span id="toastMsg">Notification message</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="py-4 text-center text-xs font-bold text-slate-600 bg-white/40">
+    <p>Made with ❤️ for young musicians everywhere! | Melodiat Kids Music Studio</p>
+  </footer>
+
+  <script>
+    /* ==========================================
+       1. GLOBAL STATE & CONSTANTS
+       ========================================== */
+    const NOTES = [
+      { name: 'C5', pitch: 'C5', freq: 523.25, label: 'Do High', color: 'bg-red-400', key: 'k' },
+      { name: 'B4', pitch: 'B4', freq: 493.88, label: 'Ti', color: 'bg-purple-400', key: 'j' },
+      { name: 'A4', pitch: 'A4', freq: 440.00, label: 'La', color: 'bg-indigo-400', key: 'h' },
+      { name: 'G4', pitch: 'G4', freq: 392.00, label: 'So', color: 'bg-blue-400', key: 'g' },
+      { name: 'F4', pitch: 'F4', freq: 349.23, label: 'Fa', color: 'bg-green-400', key: 'f' },
+      { name: 'E4', pitch: 'E4', freq: 329.63, label: 'Mi', color: 'bg-yellow-400', key: 'd' },
+      { name: 'D4', pitch: 'D4', freq: 293.66, label: 'Re', color: 'bg-orange-400', key: 's' },
+      { name: 'C4', pitch: 'C4', freq: 261.63, label: 'Do Low', color: 'bg-rose-400', key: 'a' }
+    ];
+
+    const DRUM_TYPES = [
+      { name: 'Crash', id: 'crash', icon: '💥', color: 'bg-yellow-500', key: 'r' },
+      { name: 'Hi-Hat', id: 'hihat', icon: '🎩', color: 'bg-green-500', key: 'e' },
+      { name: 'Snare', id: 'snare', icon: '🥁', color: 'bg-blue-500', key: 'w' },
+      { name: 'Kick', id: 'kick', icon: '💣', color: 'bg-red-500', key: 'q' }
+    ];
+
+    const NUM_STEPS = 16;
+    let currentInstrument = 'piano'; // piano, guitar, xylophone, synth, drums
+    let tempo = 120;
+    let masterVolume = 0.8;
+    let isPlaying = false;
+    let currentStep = 0;
+    let timerId = null;
+
+    // Recording live play state
+    let isRecording = false;
+    let recordedEvents = [];
+    let recordStartTime = 0;
+
+    // Grid Matrix Data Structure: [noteIndex][stepIndex] -> boolean
+    // 8 note rows for melody + 4 drum rows = 12 total rows
+    let gridState = Array(NOTES.length + DRUM_TYPES.length).fill(null).map(() => Array(NUM_STEPS).fill(false));
+
+    /* ==========================================
+       2. WEB AUDIO API SOUND SYNTHESIZER
+       ========================================== */
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Dynamic Sound Generators
+    function playSynthesizedSound(ctx, inst, freqOrType, duration = 0.5, when = 0) {
+      const now = when === 0 ? ctx.currentTime : when;
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(masterVolume, now);
+      masterGain.connect(ctx.destination);
+
+      if (inst === 'drums') {
+        playDrumSound(ctx, masterGain, freqOrType, now);
+        return;
+      }
+
+      const freq = freqOrType;
+
+      if (inst === 'piano') {
+        // Warm Triangle + Sine combination with fast attack, smooth decay
+        const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc2.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        osc2.frequency.setValueAtTime(freq * 2, now); // subtle overtone
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.7, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration + 0.3);
+
+        osc.connect(gain);
+        osc2.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(now);
+        osc2.start(now);
+        osc.stop(now + duration + 0.3);
+        osc2.stop(now + duration + 0.3);
+
+      } else if (inst === 'guitar') {
+        // Plucked Sawtooth with low-pass filter envelope (Karplus-Strong style sim)
+        const osc = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(freq * 4, now);
+        filter.frequency.exponentialRampToValueAtTime(freq, now + duration);
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.8, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration + 0.2);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + duration + 0.2);
+
+      } else if (inst === 'xylophone') {
+        // Pure Sine waves with high frequency metallic overtones and crisp percussive decay
+        const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc2.type = 'sine';
+
+        osc.frequency.setValueAtTime(freq, now);
+        osc2.frequency.setValueAtTime(freq * 3.01, now); // Metallic non-harmonic overtone
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.9, now + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+
+        osc.connect(gain);
+        osc2.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(now);
+        osc2.start(now);
+        osc.stop(now + 0.45);
+        osc2.stop(now + 0.45);
+
+      } else if (inst === 'synth') {
+        // Cheerful Square/Saw retro video-game synth note
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.5, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration + 0.1);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + duration + 0.1);
+      }
+    }
+
+    // Synthesize Drums (Kick, Snare, HiHat, Crash)
+    function playDrumSound(ctx, destination, type, now) {
+      if (type === 'kick') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.3);
+        gain.gain.setValueAtTime(1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'snare') {
+        // Noise + Tonal pitch burst
+        const bufferSize = ctx.sampleRate * 0.2;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'highpass';
+        noiseFilter.frequency.value = 800;
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.7, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(gain);
+        gain.connect(destination);
+
+        noise.start(now);
+      } else if (type === 'hihat') {
+        // Short highpass noise
+        const bufferSize = ctx.sampleRate * 0.08;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'highpass';
+        noiseFilter.frequency.value = 7000;
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(gain);
+        gain.connect(destination);
+
+        noise.start(now);
+      } else if (type === 'crash') {
+        // Longer metallic noise
+        const bufferSize = ctx.sampleRate * 0.6;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.value = 4500;
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.8, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(gain);
+        gain.connect(destination);
+
+        noise.start(now);
+      }
+    }
+
+    /* ==========================================
+       3. UI GENERATION & INTERACTION
+       ========================================== */
+
+    // Build the Grid Matrix UI
+    function initSequencerUI() {
+      const grid = document.getElementById('sequencerGrid');
+      grid.innerHTML = '';
+
+      // Combine Melodic Notes + Drum Types into rows
+      const allRows = [
+        ...NOTES.map((n, i) => ({ type: 'note', data: n, index: i })),
+        ...DRUM_TYPES.map((d, i) => ({ type: 'drum', data: d, index: NOTES.length + i }))
+      ];
+
+      allRows.forEach(row => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'flex items-center gap-1.5';
+
+        // Row Header Label
+        const labelEl = document.createElement('div');
+        labelEl.className = `w-28 h-9 rounded-xl flex items-center justify-between px-2 text-xs font-bold text-white shadow-sm shrink-0 ${row.type === 'note' ? row.data.color : row.data.color}`;
+        labelEl.innerHTML = row.type === 'note' 
+          ? `<span>${row.data.name}</span><span class="opacity-80">${row.data.label}</span>`
+          : `<span>${row.data.icon} ${row.data.name}</span>`;
+
+        rowEl.appendChild(labelEl);
+
+        // Grid Cells for 16 beats
+        for (let step = 0; step < NUM_STEPS; step++) {
+          const cell = document.createElement('button');
+          const isFourth = (step % 4 === 0);
+          
+          cell.dataset.rowIndex = row.index;
+          cell.dataset.stepIndex = step;
+          cell.className = `seq-cell flex-1 h-9 rounded-xl border-2 transition-all duration-150 flex items-center justify-center ${
+            gridState[row.index][step] 
+              ? (row.type === 'note' ? `${row.data.color} border-white active-beat` : `${row.data.color} border-white active-beat`)
+              : (isFourth ? 'bg-slate-200 border-slate-300 hover:bg-slate-300' : 'bg-slate-100 border-slate-200 hover:bg-slate-200')
+          }`;
+
+          cell.addEventListener('click', () => {
+            const ctx = getAudioContext();
+            gridState[row.index][step] = !gridState[row.index][step];
+            
+            if (gridState[row.index][step]) {
+              // Play sound feedback when toggled ON
+              if (row.type === 'note') {
+                playSynthesizedSound(ctx, currentInstrument === 'drums' ? 'piano' : currentInstrument, row.data.freq);
+                triggerRainbowSparkle(cell);
+              } else {
+                playSynthesizedSound(ctx, 'drums', row.data.id);
+              }
+            }
+            initSequencerUI();
+          });
+
+          rowEl.appendChild(cell);
+        }
+
+        grid.appendChild(rowEl);
+      });
+    }
+
+    // Build Piano Keys & Drum Pads
+    function initInteractivePlaypads() {
+      const kb = document.getElementById('keyboardContainer');
+      const drums = document.getElementById('drumPadsContainer');
+
+      kb.innerHTML = '';
+      drums.innerHTML = '';
+
+      // Piano Keys (8 Natural white keys with colorful tops)
+      NOTES.slice().reverse().forEach((note) => {
+        const keyBtn = document.createElement('button');
+        keyBtn.className = `btn-bounce flex-1 h-full mx-0.5 rounded-b-xl ${note.color} border-2 border-white flex flex-col justify-between items-center py-2 text-white shadow-lg cursor-pointer hover:brightness-110`;
+        keyBtn.innerHTML = `
+          <span class="text-xs font-black bg-black/20 px-1.5 py-0.5 rounded-md uppercase">${note.key}</span>
+          <div class="text-center">
+            <div class="text-sm font-black">${note.name}</div>
+            <div class="text-[10px] font-bold opacity-90">${note.label}</div>
+          </div>
+        `;
+
+        keyBtn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          triggerNotePlay(note);
+        });
+        keyBtn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          triggerNotePlay(note);
+        });
+
+        kb.appendChild(keyBtn);
+      });
+
+      // Drum Pads
+      DRUM_TYPES.forEach(drum => {
+        const padBtn = document.createElement('button');
+        padBtn.className = `btn-bounce ${drum.color} text-white rounded-2xl p-4 flex flex-col items-center justify-center gap-1 shadow-lg border-b-4 border-black/20 cursor-pointer hover:brightness-110`;
+        padBtn.innerHTML = `
+          <span class="text-3xl">${drum.icon}</span>
+          <span class="text-sm font-black">${drum.name}</span>
+          <span class="text-[10px] font-bold bg-black/20 px-2 py-0.5 rounded-full uppercase">Key: ${drum.key}</span>
+        `;
+
+        padBtn.addEventListener('click', () => {
+          const ctx = getAudioContext();
+          playSynthesizedSound(ctx, 'drums', drum.id);
+          recordLiveAction('drum', drum.id);
+        });
+
+        drums.appendChild(padBtn);
+      });
+    }
+
+    function triggerNotePlay(note) {
+      const ctx = getAudioContext();
+      const inst = currentInstrument === 'drums' ? 'piano' : currentInstrument;
+      playSynthesizedSound(ctx, inst, note.freq);
+      recordLiveAction('note', note.freq);
+
+      // Rainbow burst effect
+      confetti({
+        particleCount: 15,
+        spread: 40,
+        origin: { y: 0.8 }
+      });
+    }
+
+    /* ==========================================
+       4. RECORDING & SEQUENCER TIMELINE LOGIC
+       ========================================== */
+
+    function startPlayback() {
+      if (isPlaying) return;
+      const ctx = getAudioContext();
+      isPlaying = true;
+      currentStep = 0;
+      
+      document.getElementById('btnPlay').classList.add('animate-pulse', 'ring-4', 'ring-green-300');
+      document.getElementById('btnPlay').innerHTML = '<i class="fa-solid fa-pause"></i>';
+
+      const intervalMs = (60 / tempo / 4) * 1000;
+
+      timerId = setInterval(() => {
+        stepSequencer(ctx);
+        currentStep = (currentStep + 1) % NUM_STEPS;
+      }, intervalMs);
+    }
+
+    function stopPlayback() {
+      isPlaying = false;
+      clearInterval(timerId);
+      currentStep = 0;
+
+      document.getElementById('btnPlay').classList.remove('animate-pulse', 'ring-4', 'ring-green-300');
+      document.getElementById('btnPlay').innerHTML = '<i class="fa-solid fa-play ml-1"></i>';
+
+      // Reset step highlights
+      document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('ring-4', 'ring-yellow-300'));
+    }
+
+    function stepSequencer(ctx) {
+      // Highlight current step column
+      document.querySelectorAll('.seq-cell').forEach(cell => {
+        if (parseInt(cell.dataset.stepIndex) === currentStep) {
+          cell.classList.add('ring-4', 'ring-yellow-300');
+        } else {
+          cell.classList.remove('ring-4', 'ring-yellow-300');
+        }
+      });
+
+      // Play notes active on current step
+      for (let rowIndex = 0; rowIndex < gridState.length; rowIndex++) {
+        if (gridState[rowIndex][currentStep]) {
+          if (rowIndex < NOTES.length) {
+            const note = NOTES[rowIndex];
+            const inst = currentInstrument === 'drums' ? 'piano' : currentInstrument;
+            playSynthesizedSound(ctx, inst, note.freq);
+          } else {
+            const drum = DRUM_TYPES[rowIndex - NOTES.length];
+            playSynthesizedSound(ctx, 'drums', drum.id);
+          }
+        }
+      }
+    }
+
+    function recordLiveAction(type, value) {
+      if (!isRecording) return;
+      const timeOffset = Date.now() - recordStartTime;
+      recordedEvents.push({ type, value, instrument: currentInstrument, time: timeOffset });
+    }
+
+    /* ==========================================
+       5. WAV AUDIO EXPORTER (Offline Synthesis)
+       ========================================== */
+
+    async function exportToWAV() {
+      showToast('Preparing sound file...', 'fa-spinner fa-spin text-blue-400');
+
+      const totalBeats = NUM_STEPS;
+      const secondsPerBeat = 60 / tempo / 4;
+      const duration = totalBeats * secondsPerBeat + 1.0; // 1s tail decay
+
+      const sampleRate = 44100;
+      const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+
+      // Render grid items into offline context
+      for (let step = 0; step < NUM_STEPS; step++) {
+        const time = step * secondsPerBeat;
+        for (let rowIndex = 0; rowIndex < gridState.length; rowIndex++) {
+          if (gridState[rowIndex][step]) {
+            if (rowIndex < NOTES.length) {
+              const note = NOTES[rowIndex];
+              const inst = currentInstrument === 'drums' ? 'piano' : currentInstrument;
+              playSynthesizedSound(offlineCtx, inst, note.freq, 0.4, time);
+            } else {
+              const drum = DRUM_TYPES[rowIndex - NOTES.length];
+              playSynthesizedSound(offlineCtx, 'drums', drum.id, 0.4, time);
+            }
+          }
+        }
+      }
+
+      // Render audio
+      const renderedBuffer = await offlineCtx.startRendering();
+      const wavBlob = audioBufferToWav(renderedBuffer);
+      
+      // Trigger download
+      const url = URL.createObjectURL(wavBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Melodiat-Tune-${Date.now()}.wav`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showToast('WAV Sound File Saved! 🎧', 'fa-circle-check text-green-400');
+      confetti({ particleCount: 50, spread: 60 });
+    }
+
+    // AudioBuffer to WAV helper function
+    function audioBufferToWav(buffer) {
+      const numOfChan = buffer.numberOfChannels;
+      const length = buffer.length * numOfChan * 2 + 44;
+      const out = new DataView(new ArrayBuffer(length));
+      let channels = [], i, sample;
+      let offset = 0;
+      let pos = 0;
+
+      function setUint16(data) {
+        out.setUint16(pos, data, true);
+        pos += 2;
+      }
+      function setUint32(data) {
+        out.setUint32(pos, data, true);
+        pos += 4;
+      }
+
+      setUint32(0x46464952); // "RIFF"
+      setUint32(length - 8); // file length - 8
+      setUint32(0x45564157); // "WAVE"
+      setUint32(0x20746d66); // "fmt " chunk
+      setUint32(16); // length = 16
+      setUint16(1); // PCM (uncompressed)
+      setUint16(numOfChan);
+      setUint32(buffer.sampleRate);
+      setUint32(buffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+      setUint16(numOfChan * 2); // block-align
+      setUint16(16); // 16-bit
+      setUint32(0x61746164); // "data" chunk
+      setUint32(length - pos - 4);
+
+      for (i = 0; i < buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i));
+
+      while (offset < buffer.length) {
+        for (i = 0; i < numOfChan; i++) {
+          sample = Math.max(-1, Math.min(1, channels[i][offset]));
+          sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+          out.setInt16(pos, sample, true);
+          pos += 2;
+        }
+        offset++;
+      }
+
+      return new Blob([out], { type: 'audio/wav' });
+    }
+
+    /* ==========================================
+       6. PRESETS & PROJECT SAVE / LOAD
+       ========================================== */
+
+    const PRESETS = {
+      twinkle: [
+        { row: 7, steps: [0, 1] }, // C4
+        { row: 3, steps: [4, 5] }, // G4
+        { row: 2, steps: [6, 7] }, // A4
+        { row: 3, steps: [8] },    // G4
+        { row: 4, steps: [10, 11] }, // F4
+        { row: 5, steps: [12, 13] }, // E4
+        { row: 6, steps: [14] }    // D4
+      ],
+      birthday: [
+        { row: 7, steps: [0, 1] }, // C4
+        { row: 6, steps: [2] },    // D4
+        { row: 7, steps: [4] },    // C4
+        { row: 4, steps: [6] },    // F4
+        { row: 5, steps: [8, 10] }, // E4
+        { row: 7, steps: [12, 13] }, // C4
+        { row: 6, steps: [14] }     // D4
+      ],
+      jingle: [
+        { row: 5, steps: [0, 2, 4] }, // E4
+        { row: 5, steps: [8, 10, 12] }, // E4
+        { row: 3, steps: [14] },      // G4
+        { row: 11, steps: [0, 4, 8, 12] } // Drums Kick
+      ],
+      funky: [
+        { row: 11, steps: [0, 4, 8, 12] }, // Kick
+        { row: 10, steps: [4, 12] },      // Snare
+        { row: 9, steps: [0, 2, 4, 6, 8, 10, 12, 14] }, // HiHat
+        { row: 7, steps: [0, 3] }, // Do Low
+        { row: 3, steps: [6, 10] } // So
+      ]
+    };
+
+    function loadPreset(key) {
+      if (!PRESETS[key]) return;
+      clearGridData();
+      PRESETS[key].forEach(item => {
+        item.steps.forEach(st => {
+          if (gridState[item.row] && st < NUM_STEPS) {
+            gridState[item.row][st] = true;
+          }
+        });
+      });
+      initSequencerUI();
+      showToast(`Loaded Preset Melody! 🎵`, 'fa-star text-yellow-400');
+    }
+
+    function clearGridData() {
+      gridState = Array(NOTES.length + DRUM_TYPES.length).fill(null).map(() => Array(NUM_STEPS).fill(false));
+    }
+
+    function saveProjectJSON() {
+      const projectData = {
+        name: 'Melodiat Project',
+        date: new Date().toISOString(),
+        tempo,
+        instrument: currentInstrument,
+        gridState
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `melodiat_project_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      showToast('Project Saved as File! 💾', 'fa-circle-check text-green-400');
+    }
+
+    function loadProjectJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.gridState) {
+            gridState = parsed.gridState;
+            if (parsed.tempo) {
+              tempo = parsed.tempo;
+              document.getElementById('tempoSlider').value = tempo;
+              document.getElementById('tempoVal').textContent = tempo;
+            }
+            if (parsed.instrument) {
+              switchInstrument(parsed.instrument);
+            }
+            initSequencerUI();
+            showToast('Project Loaded Successfully! 📂', 'fa-folder-open text-purple-400');
+          }
+        } catch(err) {
+          showToast('Invalid Project File!', 'fa-triangle-exclamation text-red-400');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function switchInstrument(inst) {
+      currentInstrument = inst;
+      document.querySelectorAll('.inst-btn').forEach(btn => {
+        if (btn.dataset.inst === inst) {
+          btn.classList.add('ring-4', 'ring-purple-400', 'bg-white');
+        } else {
+          btn.classList.remove('ring-4', 'ring-purple-400', 'bg-white');
+        }
+      });
+
+      const kb = document.getElementById('keyboardContainer');
+      const drums = document.getElementById('drumPadsContainer');
+
+      if (inst === 'drums') {
+        kb.classList.add('hidden');
+        drums.classList.remove('hidden');
+      } else {
+        kb.classList.remove('hidden');
+        drums.classList.add('hidden');
+      }
+    }
+
+    function showToast(msg, iconClass) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.textContent = msg;
+      toastIcon.className = `fa-solid ${iconClass}`;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    function triggerRainbowSparkle(element) {
+      const rect = element.getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+      
+      confetti({
+        particleCount: 8,
+        spread: 30,
+        origin: { x, y }
+      });
+    }
+
+    /* ==========================================
+       7. EVENT LISTENERS & SETUP
+       ========================================== */
+
+    window.onload = function() {
+      // Build UIs
+      initSequencerUI();
+      initInteractivePlaypads();
+      switchInstrument('piano');
+
+      // Playback Buttons
+      document.getElementById('btnPlay').addEventListener('click', () => {
+        getAudioContext();
+        if (isPlaying) stopPlayback();
+        else startPlayback();
+      });
+
+      document.getElementById('btnStop').addEventListener('click', () => {
+        stopPlayback();
+      });
+
+      // Clear Grid
+      document.getElementById('btnClearGrid').addEventListener('click', () => {
+        clearGridData();
+        initSequencerUI();
+        showToast('Grid Cleared!', 'fa-trash text-red-400');
+      });
+
+      // Instrument Switchers
+      document.querySelectorAll('.inst-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const inst = e.currentTarget.dataset.inst;
+          switchInstrument(inst);
+        });
+      });
+
+      // Tempo & Volume Sliders
+      const tempoSlider = document.getElementById('tempoSlider');
+      tempoSlider.addEventListener('input', (e) => {
+        tempo = parseInt(e.target.value);
+        document.getElementById('tempoVal').textContent = tempo;
+        
+        const icon = document.getElementById('tempoIcon');
+        if (tempo < 90) icon.textContent = '🐢';
+        else if (tempo < 150) icon.textContent = '🚶';
+        else icon.textContent = '🚀';
+
+        if (isPlaying) {
+          stopPlayback();
+          startPlayback();
+        }
+      });
+
+      const volSlider = document.getElementById('volSlider');
+      volSlider.addEventListener('input', (e) => {
+        masterVolume = parseFloat(e.target.value) / 100;
+        document.getElementById('volVal').textContent = `${e.target.value}%`;
+      });
+
+      // Preset Selector
+      document.getElementById('presetSelect').addEventListener('change', (e) => {
+        if (e.target.value) {
+          loadPreset(e.target.value);
+          e.target.value = '';
+        }
+      });
+
+      // Save/Load/Export
+      document.getElementById('btnNew').addEventListener('click', () => {
+        stopPlayback();
+        clearGridData();
+        initSequencerUI();
+        showToast('New Project Started! 🎨', 'fa-sparkles text-yellow-400');
+      });
+
+      document.getElementById('btnSaveProj').addEventListener('click', saveProjectJSON);
+      
+      document.getElementById('btnLoadProj').addEventListener('click', () => {
+        document.getElementById('fileInput').click();
+      });
+      document.getElementById('fileInput').addEventListener('change', loadProjectJSON);
+
+      document.getElementById('btnExportWav').addEventListener('click', exportToWAV);
+
+      // Recording Button
+      const btnRecord = document.getElementById('btnRecord');
+      btnRecord.addEventListener('click', () => {
+        isRecording = !isRecording;
+        const dot = document.getElementById('recDot');
+        const text = document.getElementById('recStatusText');
+        
+        if (isRecording) {
+          recordedEvents = [];
+          recordStartTime = Date.now();
+          dot.className = 'w-4 h-4 bg-red-600 rounded-full animate-ping';
+          text.textContent = 'Recording...';
+          showToast('Live Recording Started! 🎙️', 'fa-circle-dot text-red-500');
+        } else {
+          dot.className = 'w-4 h-4 bg-red-200 rounded-full border-2 border-white';
+          text.textContent = 'Record';
+          showToast(`Recorded ${recordedEvents.length} notes! 🌟`, 'fa-circle-check text-green-400');
+        }
+      });
+
+      // Keyboard Hotkeys binding (A, S, D, F, G, H, J, K & Q, W, E, R for drums)
+      window.addEventListener('keydown', (e) => {
+        if (e.repeat) return;
+        const key = e.key.toLowerCase();
+        
+        // Check Melodic notes
+        const matchedNote = NOTES.find(n => n.key === key);
+        if (matchedNote) {
+          triggerNotePlay(matchedNote);
+          return;
+        }
+
+        // Check Drum keys
+        const matchedDrum = DRUM_TYPES.find(d => d.key === key);
+        if (matchedDrum) {
+          const ctx = getAudioContext();
+          playSynthesizedSound(ctx, 'drums', matchedDrum.id);
+          recordLiveAction('drum', matchedDrum.id);
+        }
+      });
+    };
+  </script>
+</body>
+</html>
